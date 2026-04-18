@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}{{ resource.title }}{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:800px;">
+    <div class="mb-3">
+        <a href="{{ url_for('browse_resources') }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+            <i class="bi bi-arrow-left me-2"></i>Back to Resources
+        </a>
+    </div>
+    <div class="card glass-panel hover-lift">
+        <div class="card-header">
+            <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                    <span class="badge category-badge mb-2">{{ resource.category }}</span>
+                    <h2 class="fw-700 mb-1">{{ resource.title }}</h2>
+                    <div class="d-flex align-items-center gap-3 text-muted small">
+                        <span><i class="bi bi-person me-1"></i>{{ resource.owner_name }}</span>
+                        <span>
+                            <i class="bi bi-star-fill text-warning me-1"></i>{{ resource.trust_score }}
+                        </span>
+                        {% if resource.location %}
+                        <span><i class="bi bi-geo-alt me-1"></i>{{ resource.location }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <span
+                    class="badge fs-6 {% if resource.status == 'Available' %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} px-3 py-2">
+                    {{ resource.status }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if resource.description %}
+            <p class="mb-4">{{ resource.description }}</p>
+            {% endif %}
+
+            <!-- Terms -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-4">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-primary-subtle"><i class="bi bi-coin text-primary"></i></div>
+                        <div>
+                            <p class="dib-label">Credits / Day</p>
+                            <p class="dib-value">{{ resource.credits_per_day }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-warning-subtle"><i class="bi bi-shield-lock text-warning"></i></div>
+                        <div>
+                            <p class="dib-label">Security Deposit</p>
+                            <p class="dib-value">{{ resource.security_deposit }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-info-subtle"><i class="bi bi-boxes text-info"></i></div>
+                        <div>
+                            <p class="dib-label">Quantity</p>
+                            <p class="dib-value">{{ resource.quantity }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% if resource.available_from %}
+                <div class="col-sm-4">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-success-subtle"><i class="bi bi-calendar-check text-success"></i></div>
+                        <div>
+                            <p class="dib-label">Available From</p>
+                            <p class="dib-value">{{ resource.available_from }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if resource.available_until %}
+                <div class="col-sm-4">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-danger-subtle"><i class="bi bi-calendar-x text-danger"></i></div>
+                        <div>
+                            <p class="dib-label">Available Until</p>
+                            <p class="dib-value">{{ resource.available_until }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Borrow Request Form -->
+            {% if resource.status == 'Available' and resource.owner_id != session.user_id %}
+            <div class="borrow-form-box">
+                <h5 class="fw-600 mb-3"><i class="bi bi-hand-index me-2 text-primary"></i>Request to Borrow</h5>
+                <form method="POST" action="{{ url_for('request_resource', resource_id=resource.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Borrow Duration (Days)</label>
+                            <input type="number" class="form-control rounded-3" name="borrow_days" id="borrow_days"
+                                value="1" min="1" max="30" onchange="calcTotal()" oninput="calcTotal()">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="borrow-total-box" id="totalBox">
+                                <span>Total: <strong id="totalCredits">{{ resource.credits_per_day +
+                                        resource.security_deposit }}</strong> credits</span>
+                                <span class="text-muted small ms-2">({{ resource.credits_per_day }}/day + {{
+                                    resource.security_deposit }} deposit)</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <textarea class="form-control rounded-3" name="message" rows="2"
+                                placeholder="Message to lender (optional)..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary rounded-3 px-5">
+                                <i class="bi bi-send me-2"></i>Send Borrow Request
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% elif resource.owner_id == session.user_id %}
+            <div class="alert alert-info rounded-3">
+                <i class="bi bi-info-circle me-2"></i>This is your own resource.
+            </div>
+            {% else %}
+            <div class="alert alert-warning rounded-3">
+                <i class="bi bi-x-circle me-2"></i>This resource is currently not available for borrowing.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    const cpd = parseFloat("{{ resource.credits_per_day }}");
+    const deposit = parseFloat("{{ resource.security_deposit }}");
+    function calcTotal() {
+        const days = parseInt(document.getElementById('borrow_days').value) || 1;
+        document.getElementById('totalCredits').textContent = (days * cpd + deposit).toFixed(1);
+    }
+</script>
+{% endblock %}

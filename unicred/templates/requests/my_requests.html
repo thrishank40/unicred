@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}My Requests{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 px-lg-5 py-4">
+
+    <!-- Header -->
+    <div class="dashboard-welcome-bar mb-4">
+        <div>
+            <p class="section-eyebrow mb-1">My Activity</p>
+            <h1 class="fw-800 mb-1" style="font-size:clamp(1.3rem,2.5vw,1.7rem);">
+                <i class="bi bi-person-check me-2 text-primary"></i>My Requests
+            </h1>
+            <p class="text-muted mb-0" style="font-size:.875rem;">
+                Requests you've posted and exchanges you've agreed to fulfill
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('post_resource_request') }}" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-circle me-2"></i>New Request
+            </a>
+            <a href="{{ url_for('browse_requests') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-grid me-2"></i>Browse All
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-pills mb-4 gap-2">
+        <li class="nav-item">
+            <a class="nav-link {% if tab == 'resource' %}active{% endif %}"
+                href="{{ url_for('my_requests', tab='resource') }}">
+                <i class="bi bi-box-seam me-2"></i>Resource Requests
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if tab == 'knowledge' %}active{% endif %}"
+                href="{{ url_for('my_requests', tab='knowledge') }}">
+                <i class="bi bi-mortarboard me-2"></i>Knowledge Requests
+            </a>
+        </li>
+    </ul>
+
+    <!-- ═══ RESOURCE REQUESTS TAB ════════════════════════════════ -->
+    {% if tab == 'resource' %}
+    <div class="row g-4">
+
+        <!-- My Posted Resource Requests (left) -->
+        <div class="col-lg-6">
+            <div class="card glass-panel h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-send text-primary"></i>
+                    <h5 class="mb-0 fw-700">Posted by Me</h5>
+                    <span class="badge bg-primary ms-auto rounded-pill">{{ my_resource_posted|length }}</span>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if my_resource_posted %}
+                    {% for req in my_resource_posted %}
+                    <div class="request-item">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <p class="mb-0 fw-700" style="font-size:.9rem;">{{ req.title }}</p>
+                                    <span class="status-badge status-{% if req.status == 'Open' %}available{% elif req.status == 'Accepted' %}approved{% elif req.status == 'Completed' %}completed{% else %}cancelled{% endif %}"
+                                        style="font-size:10px;">{{ req.status }}</span>
+                                </div>
+                                <p class="text-muted small mb-1">
+                                    <i class="bi bi-coin me-1 text-primary"></i>{{ req.credits_offered }} credits ·
+                                    <i class="bi bi-calendar3 me-1"></i>{{ req.duration_days }} day(s)
+                                </p>
+                                {% if req.status == 'Accepted' and req.accepted_by_name %}
+                                <p class="small mb-0" style="color:var(--uc-success);">
+                                    <i class="bi bi-person-check me-1"></i>Accepted by <strong>{{ req.accepted_by_name }}</strong>
+                                </p>
+                                {% endif %}
+                            </div>
+                            <!-- Complete button (only when Accepted) -->
+                            {% if req.status == 'Accepted' %}
+                            <form method="POST"
+                                action="{{ url_for('complete_resource_request', req_id=req.id) }}"
+                                onsubmit="return confirm('Initiate the QR exchange for {{ req.title }}?');"
+                                class="flex-shrink-0">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
+                                    <i class="bi bi-qr-code me-1"></i>Start Exchange
+                                </button>
+                            </form>
+                            {% elif req.status == 'Completed' and req.transaction_id %}
+                            <a href="{{ url_for('view_transaction', tx_db_id=req.transaction_id) }}"
+                                class="btn btn-outline-primary btn-sm rounded-pill px-3 flex-shrink-0">
+                                <i class="bi bi-receipt me-1"></i>Receipt
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-4 text-center">
+                        <i class="bi bi-inbox text-muted fs-2"></i>
+                        <p class="text-muted mt-2 mb-2">No resource requests posted yet</p>
+                        <a href="{{ url_for('post_resource_request') }}"
+                            class="btn btn-outline-primary btn-sm rounded-pill">Post a Request</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Requests I'm Fulfilling (right) -->
+        <div class="col-lg-6">
+            <div class="card glass-panel h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-hand-thumbs-up text-success"></i>
+                    <h5 class="mb-0 fw-700">Accepted by Me</h5>
+                    <span class="badge bg-success ms-auto rounded-pill">{{ my_resource_accepted|length }}</span>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if my_resource_accepted %}
+                    {% for req in my_resource_accepted %}
+                    <div class="request-item">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <p class="mb-0 fw-700" style="font-size:.9rem;">{{ req.title }}</p>
+                                    <span class="status-badge status-{% if req.status == 'Accepted' %}approved{% else %}completed{% endif %}"
+                                        style="font-size:10px;">{{ req.status }}</span>
+                                </div>
+                                <p class="text-muted small mb-1">
+                                    Requested by <strong>{{ req.requester_name }}</strong> ·
+                                    <i class="bi bi-coin me-1 text-primary"></i>{{ req.credits_offered }} credits
+                                </p>
+                                {% if req.status == 'Accepted' %}
+                                <p class="small text-muted mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>Waiting for requester to initiate exchange
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% if req.status == 'Accepted' %}
+                            <div class="flex-shrink-0">
+                                <a href="{{ url_for('scan_qr') }}"
+                                    class="btn btn-outline-info btn-sm rounded-pill px-3">
+                                    <i class="bi bi-qr-code-scan me-1"></i>Scan QR
+                                </a>
+                            </div>
+                            {% elif req.status == 'Completed' and req.transaction_id %}
+                            <a href="{{ url_for('view_transaction', tx_db_id=req.transaction_id) }}"
+                                class="btn btn-outline-primary btn-sm rounded-pill px-3 flex-shrink-0">
+                                <i class="bi bi-receipt me-1"></i>Receipt
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-4 text-center">
+                        <i class="bi bi-hand-thumbs-up text-muted fs-2"></i>
+                        <p class="text-muted mt-2 mb-2">No requests accepted yet</p>
+                        <a href="{{ url_for('browse_requests') }}"
+                            class="btn btn-outline-success btn-sm rounded-pill">Browse Open Requests</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+    <!-- ═══ KNOWLEDGE REQUESTS TAB ════════════════════════════════ -->
+    {% if tab == 'knowledge' %}
+    <div class="row g-4">
+
+        <!-- My Posted Knowledge Requests -->
+        <div class="col-lg-6">
+            <div class="card glass-panel h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-mortarboard text-warning"></i>
+                    <h5 class="mb-0 fw-700">Requests I Posted</h5>
+                    <span class="badge bg-warning text-dark ms-auto rounded-pill">{{ my_knowledge_posted|length }}</span>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if my_knowledge_posted %}
+                    {% for req in my_knowledge_posted %}
+                    <div class="request-item">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <p class="mb-0 fw-700" style="font-size:.9rem;">{{ req.topic }}</p>
+                                    <span class="status-badge status-{% if req.status == 'Open' %}available{% elif req.status == 'Accepted' %}approved{% elif req.status == 'Completed' %}completed{% else %}cancelled{% endif %}"
+                                        style="font-size:10px;">{{ req.status }}</span>
+                                </div>
+                                <p class="text-muted small mb-1">
+                                    <span class="fw-600">{{ req.subject }}</span> ·
+                                    <i class="bi bi-coin me-1" style="color:var(--uc-warning);"></i>{{ req.credits_offered }} credits
+                                </p>
+                                {% if req.status == 'Accepted' and req.accepted_by_name %}
+                                <p class="small mb-0" style="color:var(--uc-success);">
+                                    <i class="bi bi-person-check me-1"></i>{{ req.accepted_by_name }} will help you
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% if req.status == 'Accepted' %}
+                            <form method="POST"
+                                action="{{ url_for('complete_knowledge_request', req_id=req.id) }}"
+                                onsubmit="return confirm('Mark session as complete and transfer {{ req.credits_offered }} credits?');"
+                                class="flex-shrink-0">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
+                                    <i class="bi bi-check-circle me-1"></i>Mark Complete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-4 text-center">
+                        <i class="bi bi-lightbulb text-muted fs-2"></i>
+                        <p class="text-muted mt-2 mb-2">No knowledge requests posted</p>
+                        <a href="{{ url_for('post_knowledge_request') }}"
+                            class="btn btn-outline-warning btn-sm rounded-pill">Post a Request</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Sessions I'm Helping With -->
+        <div class="col-lg-6">
+            <div class="card glass-panel h-100">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-person-hearts text-success"></i>
+                    <h5 class="mb-0 fw-700">Sessions I Accepted</h5>
+                    <span class="badge bg-success ms-auto rounded-pill">{{ my_knowledge_accepted|length }}</span>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if my_knowledge_accepted %}
+                    {% for req in my_knowledge_accepted %}
+                    <div class="request-item">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <p class="mb-0 fw-700" style="font-size:.9rem;">{{ req.topic }}</p>
+                                    <span class="status-badge status-{% if req.status == 'Accepted' %}approved{% else %}completed{% endif %}"
+                                        style="font-size:10px;">{{ req.status }}</span>
+                                </div>
+                                <p class="text-muted small mb-1">
+                                    Helping <strong>{{ req.requester_name }}</strong> ·
+                                    <i class="bi bi-coin me-1" style="color:var(--uc-warning);"></i>{{ req.credits_offered }} credits
+                                </p>
+                                {% if req.status == 'Accepted' %}
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-info-circle me-1"></i>Ask them to mark it complete after the session
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% if req.status == 'Accepted' %}
+                            <!-- Helper can also mark complete -->
+                            <form method="POST"
+                                action="{{ url_for('complete_knowledge_request', req_id=req.id) }}"
+                                onsubmit="return confirm('Mark session complete and receive {{ req.credits_offered }} credits?');"
+                                class="flex-shrink-0">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
+                                    <i class="bi bi-check-circle me-1"></i>Mark Complete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-4 text-center">
+                        <i class="bi bi-hand-thumbs-up text-muted fs-2"></i>
+                        <p class="text-muted mt-2 mb-2">No sessions accepted yet</p>
+                        <a href="{{ url_for('browse_requests', tab='knowledge') }}"
+                            class="btn btn-outline-success btn-sm rounded-pill">Browse Knowledge Requests</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

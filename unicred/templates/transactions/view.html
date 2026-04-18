@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Transaction #{{ tx.transaction_id[:8] }}{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:720px;">
+    <div class="mb-3">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline-secondary rounded-pill">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-receipt me-2 text-primary"></i>Transaction Details</h4>
+                <span class="badge status-badge fs-6 status-{{ tx.status.lower() }}">{{ tx.status }}</span>
+            </div>
+            <p class="text-muted small mt-1 mb-0">ID: {{ tx.transaction_id }}</p>
+        </div>
+        <div class="dash-card-body">
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-primary-subtle"><i class="bi bi-box-seam text-primary"></i></div>
+                        <div>
+                            <p class="dib-label">Resource</p>
+                            <p class="dib-value">{{ tx.title }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-info-subtle"><i class="bi bi-coin text-info"></i></div>
+                        <div>
+                            <p class="dib-label">Credits</p>
+                            <p class="dib-value">{{ tx.credits_transferred }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-success-subtle"><i class="bi bi-person-up text-success"></i></div>
+                        <div>
+                            <p class="dib-label">Lender</p>
+                            <p class="dib-value">{{ tx.lender_name }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-warning-subtle"><i class="bi bi-person-down text-warning"></i></div>
+                        <div>
+                            <p class="dib-label">Borrower</p>
+                            <p class="dib-value">{{ tx.borrower_name }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-danger-subtle"><i class="bi bi-calendar-x text-danger"></i></div>
+                        <div>
+                            <p class="dib-label">Due Date</p>
+                            <p class="dib-value">{{ tx.due_date }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="detail-info-box">
+                        <div class="dib-icon bg-secondary-subtle"><i class="bi bi-shield-lock text-secondary"></i></div>
+                        <div>
+                            <p class="dib-label">Security Deposit</p>
+                            <p class="dib-value">{{ tx.security_deposit }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Display -->
+            {% if tx.qr_file %}
+            <div class="qr-display-box text-center">
+                <h5 class="fw-600 mb-3"><i
+                        class="bi bi-qr-code me-2 {% if tx.qr_action == 'Return' %}text-success{% else %}text-primary{% endif %}"></i>{{
+                    tx.qr_action }} QR Code</h5>
+                <p class="text-muted small mb-3">Show this QR code to the lender {% if tx.qr_action == 'Return' %}when
+                    returning{% else %}when collecting{% endif %} the item</p>
+                <div class="qr-image-wrapper mx-auto">
+                    <img src="{{ url_for('static', filename='qrcodes/' + tx.qr_file) }}"
+                        alt="{{ tx.qr_action }} QR Code" class="img-fluid" style="max-width:220px;">
+                </div>
+                <div class="mt-3">
+                    <span class="badge bg-warning-subtle text-warning px-3 py-2">
+                        <i class="bi bi-clock me-1"></i>Expires in 5 minutes
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Rate Button after return -->
+            {% if tx.status == 'Returned' %}
+            <div class="text-center mt-4">
+                <a href="{{ url_for('rate_transaction', tx_db_id=tx.id) }}" class="btn btn-warning rounded-pill px-5">
+                    <i class="bi bi-star me-2"></i>Rate this Transaction
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Countdown if active -->
+            {% if tx.status == 'Active' and tx.due_date %}
+            <div class="countdown-box mt-4 text-center" id="countdown">
+                <p class="text-muted small mb-1">Time remaining until due date</p>
+                <h4 class="fw-700 text-danger" id="countdownTimer">--</h4>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if tx.status == 'Active' and tx.due_date %}
+<script>
+    const due = new Date("{{ tx.due_date }}T23:59:59");
+    function tick() {
+        const now = new Date();
+        const diff = due - now;
+        if (diff <= 0) { document.getElementById('countdownTimer').textContent = 'OVERDUE!'; return; }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        document.getElementById('countdownTimer').textContent = `${d}d ${h}h ${m}m`;
+    }
+    tick(); setInterval(tick, 60000);
+</script>
+{% endif %}
+{% endblock %}

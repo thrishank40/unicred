@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Knowledge Hub{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+        <div>
+            <h1 class="page-title mb-1"><i class="bi bi-lightbulb me-2 text-warning"></i>Knowledge Hub</h1>
+            <p class="text-muted mb-0">Academic help, skill sessions, and tutoring from your campus peers</p>
+        </div>
+        <a href="{{ url_for('offer_resource') }}" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-plus-circle me-2"></i>Offer Help
+        </a>
+    </div>
+
+    <!-- Type Tabs -->
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if rtype == 'Knowledge' %}active{% endif %}"
+                href="{{ url_for('knowledge_hub', type='Knowledge') }}">
+                <i class="bi bi-book me-2"></i>Academic Help
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if rtype == 'Skill' %}active{% endif %}"
+                href="{{ url_for('knowledge_hub', type='Skill') }}">
+                <i class="bi bi-tools me-2"></i>Skills
+            </a>
+        </li>
+    </ul>
+
+    {% if items %}
+    <div class="row g-4">
+        {% for item in items %}
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+            <div class="resource-card h-100">
+                <div class="resource-card-header">
+                    <div class="resource-category-icon">
+                        {% if item.resource_type == 'Knowledge' %}
+                        <i class="bi bi-mortarboard text-primary"></i>
+                        {% else %}
+                        <i class="bi bi-tools text-info"></i>
+                        {% endif %}
+                    </div>
+                    <span class="badge category-badge">{{ item.category }}</span>
+                </div>
+                <div class="resource-card-body">
+                    <h5 class="resource-title">{{ item.title }}</h5>
+                    <p class="text-muted small mb-3">{{ item.description[:80] if item.description else 'No description'
+                        }}{% if item.description and item.description|length > 80 %}...{% endif %}</p>
+                    <div class="resource-meta">
+                        <div class="meta-item">
+                            <i class="bi bi-coin text-primary me-1"></i>
+                            <span>{{ item.credits_per_day }} credits/session</span>
+                        </div>
+                        {% if item.location %}
+                        <div class="meta-item">
+                            <i class="bi bi-geo-alt text-info me-1"></i>
+                            <span>{{ item.location }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <div class="owner-avatar-sm">{{ item.owner_name[0] }}</div>
+                        <div>
+                            <p class="mb-0 small fw-500">{{ item.owner_name }}</p>
+                            <div class="trust-mini">
+                                <i class="bi bi-star-fill text-warning" style="font-size:0.65rem;"></i>
+                                <span style="font-size:0.72rem;">{{ item.trust_score }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="resource-card-footer">
+                    <a href="{{ url_for('resource_detail', resource_id=item.id) }}"
+                        class="btn btn-primary w-100 rounded-3">
+                        View & Request
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-page-state text-center py-6">
+        <i class="bi bi-lightbulb" style="font-size:5rem;color:var(--gray-300);"></i>
+        <h3 class="mt-4">No sessions available</h3>
+        <p class="text-muted">Be the first to offer academic help or a skill session!</p>
+        <a href="{{ url_for('offer_resource') }}" class="btn btn-primary rounded-pill px-5 mt-2">
+            <i class="bi bi-plus-circle me-2"></i>Offer Knowledge
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

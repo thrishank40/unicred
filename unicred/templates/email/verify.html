@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f4f6fb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            padding: 40px 40px 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #fff;
+            margin: 0 0 8px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, .8);
+            margin: 0;
+            font-size: 15px;
+        }
+
+        .logo {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, .15);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+            color: #fff;
+            font-weight: 800;
+        }
+
+        .body {
+            padding: 40px;
+        }
+
+        .body p {
+            color: #444;
+            line-height: 1.7;
+            font-size: 15px;
+            margin: 0 0 16px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #1a73e8, #1557b0);
+            color: #fff;
+            text-decoration: none;
+            padding: 14px 40px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            margin: 24px 0 16px;
+        }
+
+        .link-box {
+            background: #f4f6fb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 16px 0;
+            word-break: break-all;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .footer {
+            padding: 24px 40px;
+            background: #f9fafb;
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">U</div>
+            <h1>Verify Your Email</h1>
+            <p>Welcome to UniCred Campus Economy</p>
+        </div>
+        <div class="body">
+            <p>Thanks for registering! Click the button below to verify your email address and activate your account.
+                You'll receive <strong>100 starter credits</strong> immediately after verification.</p>
+            <div style="text-align:center;">
+                <a href="{{ verify_url }}" class="btn">Verify My Email</a>
+            </div>
+            <p>Or copy and paste this link into your browser:</p>
+            <div class="link-box">{{ verify_url }}</div>
+            <p>This link expires in <strong>24 hours</strong>. If you didn't create this account, you can safely ignore
+                this email.</p>
+        </div>
+        <div class="footer">
+            &copy; 2024 UniCred · Campus Digital Economy · This is an automated message
+        </div>
+    </div>
+</body>
+
+</html>

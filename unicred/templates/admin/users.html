@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Admin - Users{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <h1 class="page-title mb-4"><i class="bi bi-people me-2"></i>User Management</h1>
+    <div class="dash-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-header">
+                    <tr>
+                        <th>User</th>
+                        <th>Roll No.</th>
+                        <th>Department</th>
+                        <th>Role</th>
+                        <th>Balance</th>
+                        <th>Trust</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="owner-avatar-sm {% if u.is_frozen %}avatar-frozen{% endif %}">{{ u.name[0]
+                                    }}</div>
+                                <div>
+                                    <p class="mb-0 fw-600 small">{{ u.name }}</p>
+                                    <p class="mb-0 text-muted" style="font-size:0.72rem;">{{ u.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="small text-muted">{{ u.roll_number }}</td>
+                        <td class="small">{{ u.department[:25] }}</td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">{{ u.role }}</span></td>
+                        <td class="fw-600 text-primary">{{ (u.balance or 0)|int }}</td>
+                        <td><i class="bi bi-star-fill text-warning me-1" style="font-size:0.75rem;"></i>{{ u.trust_score
+                            }}</td>
+                        <td>
+                            {% if not u.is_verified %}
+                            <span class="badge bg-secondary-subtle text-secondary">Unverified</span>
+                            {% elif u.is_frozen %}
+                            <span class="badge bg-danger-subtle text-danger">Frozen</span>
+                            {% else %}
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.role != 'Admin' %}
+                            <form method="POST" action="{{ url_for('freeze_user', uid=u.id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action"
+                                    value="{{ 'unfreeze' if u.is_frozen else 'freeze' }}">
+                                {% if u.is_frozen %}
+                                <button type="submit"
+                                    class="btn btn-sm btn-outline-success rounded-pill">Unfreeze</button>
+                                {% else %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Freeze</button>
+                                {% endif %}
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

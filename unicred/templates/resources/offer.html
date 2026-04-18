@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Offer Resource{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:700px;">
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h4 class="mb-0"><i class="bi bi-plus-circle me-2 text-primary"></i>Offer a Resource</h4>
+            <p class="text-muted small mt-1 mb-0">Share your resources with the campus community and earn credits</p>
+        </div>
+        <div class="dash-card-body">
+            <form method="POST" action="{{ url_for('offer_resource') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row g-4">
+                    <!-- Type Selector -->
+                    <div class="mb-4">
+                        <label class="form-label fw-600">Offering Type</label>
+                        <div class="d-flex gap-3">
+                            <div class="type-radio-btn" onclick="setType('Resource', this)">
+                                <input type="radio" name="resource_type" value="Resource" id="typeResource" checked
+                                    hidden>
+                                <label for="typeResource"><i class="bi bi-box-seam me-2"></i>Resource</label>
+                            </div>
+                            <div class="type-radio-btn" onclick="setType('Skill', this)">
+                                <input type="radio" name="resource_type" value="Skill" id="typeSkill" hidden>
+                                <label for="typeSkill"><i class="bi bi-tools me-2"></i>Skill</label>
+                            </div>
+                            <div class="type-radio-btn" onclick="setType('Knowledge', this)">
+                                <input type="radio" name="resource_type" value="Knowledge" id="typeKnowledge" hidden>
+                                <label for="typeKnowledge"><i class="bi bi-lightbulb me-2"></i>Knowledge</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="title" name="title" placeholder="Title"
+                                    required maxlength="200">
+                                <label for="title">Item/Skill Name *</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select</option>
+                                    <option>Electronics</option>
+                                    <option>Books</option>
+                                    <option>Sports</option>
+                                    <option>Tools</option>
+                                    <option>Clothing</option>
+                                    <option>Academic</option>
+                                    <option>Skill</option>
+                                    <option>Other</option>
+                                </select>
+                                <label for="category">Category *</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <textarea class="form-control" id="description" name="description"
+                                    placeholder="Description" style="height:100px;"></textarea>
+                                <label for="description">Description</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="quantity" name="quantity" value="1"
+                                    min="1" placeholder="Qty">
+                                <label for="quantity">Quantity</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="available_from" name="available_from">
+                                <label for="available_from">Available From</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="date" class="form-control" id="available_until" name="available_until">
+                                <label for="available_until">Available Until</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="location" name="location"
+                                    placeholder="Block A, Room 204">
+                                <label for="location"><i class="bi bi-geo-alt me-1"></i>Location</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="credits_per_day" name="credits_per_day"
+                                    value="0" min="0" step="0.5" placeholder="Credits/Day">
+                                <label for="credits_per_day">Credits/Day</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="security_deposit" name="security_deposit"
+                                    value="0" min="0" step="0.5" placeholder="Deposit">
+                                <label for="security_deposit">Security Deposit</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Credit Estimate -->
+                    <div class="credit-estimate mt-4" id="creditEstimate">
+                        <i class="bi bi-calculator me-2 text-primary"></i>
+                        For a 7-day borrow: <strong id="estimateVal">0</strong> credits total
+                        (7 × <span id="cpd">0</span> + <span id="dep">0</span> deposit)
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 btn-lg rounded-3 mt-4">
+                        <i class="bi bi-check-circle me-2"></i>List Resource
+                    </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function setType(val, el) {
+        document.querySelectorAll('.type-radio-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        document.querySelector(`input[value="${val}"]`).checked = true;
+    }
+    document.querySelector('.type-radio-btn').classList.add('active');
+
+    function updateEstimate() {
+        const cpd = parseFloat(document.getElementById('credits_per_day').value) || 0;
+        const dep = parseFloat(document.getElementById('security_deposit').value) || 0;
+        document.getElementById('estimateVal').textContent = (7 * cpd + dep).toFixed(1);
+        document.getElementById('cpd').textContent = cpd;
+        document.getElementById('dep').textContent = dep;
+    }
+    document.getElementById('credits_per_day').addEventListener('input', updateEstimate);
+    document.getElementById('security_deposit').addEventListener('input', updateEstimate);
+    // Set today as min date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('available_from').min = today;
+    document.getElementById('available_from').value = today;
+</script>
+{% endblock %}

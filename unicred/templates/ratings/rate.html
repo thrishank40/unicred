@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Rate Transaction{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+    <div class="card glass-panel hover-lift">
+        <div class="card-header text-center">
+            <h4 class="mb-0"><i class="bi bi-star me-2 text-warning"></i>Rate Your Experience</h4>
+            <p class="text-muted small mt-1 mb-0">Transaction: <strong>{{ tx.title }}</strong></p>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('rate_transaction', tx_db_id=tx.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- Communication -->
+                <div class="rating-group mb-4">
+                    <label class="form-label fw-600">Communication</label>
+                    <p class="text-muted small">How well did they communicate throughout?</p>
+                    <div class="star-rating" id="commStars" data-name="communication">
+                        {% for i in range(1,6) %}
+                        <span class="star" data-val="{{ i }}" onclick="setRating('communication', '{{ i }}')">★</span>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="communication" name="communication" value="3">
+                </div>
+                <!-- Timeliness -->
+                <div class="rating-group mb-4">
+                    <label class="form-label fw-600">Timeliness</label>
+                    <p class="text-muted small">Were they on time for pickup/return?</p>
+                    <div class="star-rating" id="timeStars" data-name="timeliness">
+                        {% for i in range(1,6) %}
+                        <span class="star" data-val="{{ i }}" onclick="setRating('timeliness', '{{ i }}')">★</span>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="timeliness" name="timeliness" value="3">
+                </div>
+                <!-- Condition -->
+                <div class="rating-group mb-4">
+                    <label class="form-label fw-600">Item Condition</label>
+                    <p class="text-muted small">Was the item in expected condition?</p>
+                    <div class="star-rating" id="condStars" data-name="condition">
+                        {% for i in range(1,6) %}
+                        <span class="star" data-val="{{ i }}" onclick="setRating('condition', '{{ i }}')">★</span>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" id="condition" name="condition" value="3">
+                </div>
+                <!-- Comment -->
+                <div class="mb-4">
+                    <div class="form-floating">
+                        <textarea class="form-control" name="comment" id="comment" placeholder="Comment"
+                            style="height:100px;"></textarea>
+                        <label for="comment">Comment (optional)</label>
+                    </div>
+                </div>
+                <!-- Overall Preview -->
+                <div class="overall-preview mb-4 text-center">
+                    <p class="text-muted small mb-1">Overall Rating</p>
+                    <h2 class="fw-700 text-warning" id="overallRating">3.0</h2>
+                </div>
+                <button type="submit" class="btn btn-warning w-100 btn-lg rounded-3 text-dark fw-600">
+                    <i class="bi bi-send me-2"></i>Submit Rating
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    const ratings = { communication: 3, timeliness: 3, condition: 3 };
+
+    function setRating(name, val) {
+        ratings[name] = val;
+        document.getElementById(name).value = val;
+        const container = document.querySelector(`#${name}Stars, [data-name="${name}"]`);
+        const stars = document.querySelectorAll(`[data-name="${name}"] .star, #${name}Stars .star`);
+        stars.forEach((s, i) => {
+            s.classList.toggle('active', i < val);
+        });
+        updateOverall();
+    }
+
+    function updateOverall() {
+        const avg = ((ratings.communication + ratings.timeliness + ratings.condition) / 3).toFixed(1);
+        document.getElementById('overallRating').textContent = avg;
+    }
+
+    // Initialize stars to 3
+    ['communication', 'timeliness', 'condition'].forEach(name => setRating(name, 3));
+</script>
+{% endblock %}

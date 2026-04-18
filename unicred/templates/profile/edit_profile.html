@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Edit Profile{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:500px;">
+    <div class="dash-card">
+        <div class="dash-card-header">
+            <h4 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Profile</h4>
+        </div>
+        <div class="dash-card-body">
+            <form method="POST" action="{{ url_for('edit_profile') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}"
+                        placeholder="Full Name" required>
+                    <label for="name">Full Name</label>
+                </div>
+                <div class="form-floating mb-4">
+                    <select class="form-select" id="department" name="department">
+                        {% for dept in ['Computer Science & Engineering','Electronics & Communication','Mechanical
+                        Engineering','Civil Engineering','Information Technology','Electrical Engineering','Business
+                        Administration','Physics','Mathematics','Other'] %}
+                        <option value="{{ dept }}" {% if user.department==dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="department">Department</label>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1 rounded-3">Save Changes</button>
+                    <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary rounded-3">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

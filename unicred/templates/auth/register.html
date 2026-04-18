@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+
+<div class="auth-split-layout">
+
+    <!-- ── Left Info Panel ────────────────────────── -->
+    <div class="col-md-5 col-lg-5 auth-info-panel d-none d-md-flex">
+        <div class="auth-info-logo">
+            <i class="bi bi-hexagon-fill" style="position:absolute;font-size:44px;color:rgba(255,255,255,.25);"></i>
+            <span style="position:relative;color:#fff;font-weight:800;font-size:20px;z-index:2;">U</span>
+        </div>
+
+        <h2>Join the UniCred Campus Economy</h2>
+        <p>Create your account in under 2 minutes and start earning credits by sharing resources with your campus community.</p>
+
+        <ul class="auth-benefit-list">
+            <li>
+                <span class="benefit-icon"><i class="bi bi-gift-fill"></i></span>
+                Get <strong>100 free starter credits</strong> on sign-up
+            </li>
+            <li>
+                <span class="benefit-icon"><i class="bi bi-box-seam"></i></span>
+                List and borrow resources within your campus
+            </li>
+            <li>
+                <span class="benefit-icon"><i class="bi bi-shield-check"></i></span>
+                Secure QR-verified exchanges every time
+            </li>
+            <li>
+                <span class="benefit-icon"><i class="bi bi-star-fill"></i></span>
+                Build your trust score and campus reputation
+            </li>
+        </ul>
+    </div>
+
+    <!-- ── Right Form Panel ───────────────────────── -->
+    <div class="col-12 col-md-7 col-lg-7 auth-form-panel">
+        <div class="auth-form-box" style="max-width:520px;">
+
+            <!-- Heading -->
+            <div class="text-center mb-4">
+                <div class="auth-logo mb-3">
+                    <i class="bi bi-hexagon-fill"></i>
+                    <span>U</span>
+                </div>
+                <h2 class="fw-800 mb-1" style="letter-spacing:-.02em;">Create your account</h2>
+                <p class="text-muted mb-0" style="font-size:.875rem;">
+                    Join UniCred · Get <strong>100 starter credits</strong> instantly
+                </p>
+            </div>
+
+            <!-- Form — each input in its own wrapper (no broken nesting) -->
+            <form method="POST" action="{{ url_for('register') }}" id="registerForm" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="row g-3">
+
+                    <!-- Full Name -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="name" name="name"
+                                placeholder="Full Name" required maxlength="150">
+                            <label for="name"><i class="bi bi-person me-1"></i> Full Name</label>
+                        </div>
+                    </div>
+
+                    <!-- Roll Number -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="roll_number" name="roll_number"
+                                placeholder="Roll Number" required maxlength="50"
+                                style="text-transform:uppercase">
+                            <label for="roll_number"><i class="bi bi-credit-card me-1"></i> Roll Number</label>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="email" name="email"
+                                placeholder="you@college.edu" required autocomplete="email">
+                            <label for="email"><i class="bi bi-envelope me-1"></i> Institutional Email</label>
+                        </div>
+                    </div>
+
+                    <!-- Department -->
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <select class="form-select" id="department" name="department" required>
+                                <option value="">Select Department</option>
+                                <option>Computer Science &amp; Engineering</option>
+                                <option>Electronics &amp; Communication</option>
+                                <option>Mechanical Engineering</option>
+                                <option>Civil Engineering</option>
+                                <option>Information Technology</option>
+                                <option>Electrical Engineering</option>
+                                <option>Business Administration</option>
+                                <option>Physics</option>
+                                <option>Mathematics</option>
+                                <option>Other</option>
+                            </select>
+                            <label for="department"><i class="bi bi-building me-1"></i> Department</label>
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="col-md-6">
+                        <div class="form-floating position-relative">
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Password" required minlength="8" autocomplete="new-password">
+                            <label for="password"><i class="bi bi-lock me-1"></i> Password</label>
+                            <button type="button" class="btn-password-toggle"
+                                onclick="togglePassword('password')" tabindex="-1">
+                                <i class="bi bi-eye" id="passwordEye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength mt-1" id="strengthBar"></div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="col-md-6">
+                        <div class="form-floating position-relative">
+                            <input type="password" class="form-control" id="confirm_password"
+                                name="confirm_password" placeholder="Confirm Password"
+                                required autocomplete="new-password">
+                            <label for="confirm_password"><i class="bi bi-lock-fill me-1"></i> Confirm Password</label>
+                            <button type="button" class="btn-password-toggle"
+                                onclick="togglePassword('confirm_password')" tabindex="-1">
+                                <i class="bi bi-eye" id="confirm_passwordEye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div><!-- /row -->
+
+                <!-- Starter Credit Info -->
+                <div class="starter-credit-info mt-4">
+                    <i class="bi bi-gift-fill text-primary me-2"></i>
+                    You'll receive <strong>100 starter credits</strong> upon registration — no purchase needed!
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary w-100 btn-lg rounded-3 mt-4" id="registerBtn">
+                    <span class="btn-text"><i class="bi bi-person-plus me-2"></i>Create Account</span>
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+
+            </form>
+
+            <!-- Divider & Login link -->
+            <hr class="my-4">
+            <p class="text-center text-muted mb-0" style="font-size:.875rem;">
+                Already have an account?
+                <a href="{{ url_for('login') }}" class="text-primary fw-600">Sign in</a>
+            </p>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        const eye = document.getElementById(id + 'Eye');
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            eye.className = 'bi bi-eye';
+        }
+    }
+    // Password strength meter
+    document.getElementById('password').addEventListener('input', function () {
+        const val = this.value;
+        const bar = document.getElementById('strengthBar');
+        let strength = 0;
+        if (val.length >= 8) strength++;
+        if (/[A-Z]/.test(val)) strength++;
+        if (/[0-9]/.test(val)) strength++;
+        if (/[^A-Za-z0-9]/.test(val)) strength++;
+        const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+        const colors = ['', '#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
+        bar.innerHTML = strength > 0
+            ? `<div style="height:4px;border-radius:2px;background:${colors[strength]};width:${strength * 25}%;transition:all 0.3s;"></div>
+               <small style="color:${colors[strength]};font-size:11px;">${labels[strength]}</small>`
+            : '';
+    });
+    // Roll number uppercase
+    document.getElementById('roll_number').addEventListener('input', function () {
+        this.value = this.value.toUpperCase();
+    });
+    // Form submit guard
+    document.getElementById('registerForm').addEventListener('submit', function (e) {
+        const p = document.getElementById('password').value;
+        const cp = document.getElementById('confirm_password').value;
+        if (p !== cp) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return;
+        }
+        const btn = document.getElementById('registerBtn');
+        btn.querySelector('.btn-text').classList.add('d-none');
+        btn.querySelector('.spinner-border').classList.remove('d-none');
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

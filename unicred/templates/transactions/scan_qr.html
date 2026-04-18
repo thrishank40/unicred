@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Scan QR Code{% endblock %}
+{% block head %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+    <div class="dash-card">
+        <div class="dash-card-header text-center">
+            <h4 class="mb-0"><i class="bi bi-qr-code-scan me-2 text-primary"></i>Scan QR Code</h4>
+            <p class="text-muted small mt-1 mb-0">Scan borrower's QR code to confirm collection or return</p>
+        </div>
+        <div class="dash-card-body">
+            <!-- Scanner -->
+            <div id="scanner-container" class="mb-4">
+                <div id="qr-reader" style="width:100%;border-radius:12px;overflow:hidden;"></div>
+            </div>
+            <div class="text-center mb-4">
+                <button class="btn btn-primary rounded-pill px-5" id="startBtn" onclick="startScanner()">
+                    <i class="bi bi-camera me-2"></i>Start Camera
+                </button>
+                <button class="btn btn-outline-danger rounded-pill px-5 d-none" id="stopBtn" onclick="stopScanner()">
+                    <i class="bi bi-stop-circle me-2"></i>Stop
+                </button>
+            </div>
+
+            <!-- Manual Input -->
+            <div class="divider-text my-4"><span>or enter manually</span></div>
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="manualQrData" placeholder="Paste QR data"
+                    style="height:100px;font-family:monospace;font-size:0.8rem;"></textarea>
+                <label for="manualQrData">QR Data (JSON)</label>
+            </div>
+            <button class="btn btn-success w-100 rounded-3"
+                onclick="processQr(document.getElementById('manualQrData').value)">
+                <i class="bi bi-check-circle me-2"></i>Verify QR
+            </button>
+
+            <!-- Result -->
+            <div id="qr-result" class="mt-4 d-none">
+                <div class="alert rounded-3" id="resultAlert" role="alert"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    let html5QrcodeScanner = null;
+    let scanned = false;
+
+    function startScanner() {
+        document.getElementById('startBtn').classList.add('d-none');
+        document.getElementById('stopBtn').classList.remove('d-none');
+        html5QrcodeScanner = new Html5Qrcode("qr-reader");
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            async (decodedText) => {
+                if (scanned) return;
+                scanned = true;
+                stopScanner();
+                await processQr(decodedText);
+            },
+            (err) => { }
+        ).catch(err => {
+            showResult(false, 'Camera access denied. Please use manual input.');
+        });
+    }
+
+    function stopScanner() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().catch(() => { });
+        }
+        document.getElementById('startBtn').classList.remove('d-none');
+        document.getElementById('stopBtn').classList.add('d-none');
+    }
+
+    async function processQr(qrData) {
+        if (!qrData.trim()) { showResult(false, 'No QR data provided.'); return; }
+        try {
+            const res = await fetch('/transaction/scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
+                body: 'qr_data=' + encodeURIComponent(qrData)
+            });
+            const data = await res.json();
+            showResult(data.success, data.message);
+            if (data.success) {
+                setTimeout(() => window.location.href = '/dashboard', 3000);
+            }
+        } catch (e) {
+            showResult(false, 'Network error. Please try again.');
+        }
+    }
+
+    function showResult(success, message) {
+        const box = document.getElementById('qr-result');
+        const alert = document.getElementById('resultAlert');
+        box.classList.remove('d-none');
+        alert.className = `alert rounded-3 ${success ? 'alert-success' : 'alert-danger'}`;
+        alert.innerHTML = `<i class="bi bi-${success ? 'check-circle' : 'x-circle'} me-2"></i>${message}${success ? '<br><small>Redirecting to dashboard...</small>' : ''}`;
+        scanned = false;
+    }
+</script>
+{% endblock %}

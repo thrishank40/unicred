@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="page-title mb-1"><i class="bi bi-trophy me-2 text-warning"></i>Campus Leaderboard</h1>
+            <p class="text-muted mb-0">Top credit earners in the UniCred economy</p>
+        </div>
+    </div>
+
+    <!-- Top 3 Podium -->
+    {% if leaders|length >= 3 %}
+    <div class="podium-row mb-5">
+        <!-- 2nd -->
+        <div class="podium-card podium-2">
+            <div class="podium-avatar">{{ leaders[1].name[0] }}</div>
+            <div class="podium-name">{{ leaders[1].name }}</div>
+            <div class="podium-dept text-muted small">{{ leaders[1].department[:20] }}</div>
+            <div class="podium-badges">{% for icon in badges_map.get(leaders[1].id, []) %}{{ icon }}{% endfor %}</div>
+            <div class="podium-credits">{{ leaders[1].balance|int }} cr</div>
+            <div class="podium-block podium-block-2"><span class="podium-rank">2</span></div>
+        </div>
+        <!-- 1st -->
+        <div class="podium-card podium-1">
+            <div class="crown">👑</div>
+            <div class="podium-avatar podium-avatar-1">{{ leaders[0].name[0] }}</div>
+            <div class="podium-name fw-700">{{ leaders[0].name }}</div>
+            <div class="podium-dept text-muted small">{{ leaders[0].department[:20] }}</div>
+            <div class="podium-badges">{% for icon in badges_map.get(leaders[0].id, []) %}{{ icon }}{% endfor %}</div>
+            <div class="podium-credits text-primary">{{ leaders[0].balance|int }} cr</div>
+            <div class="podium-block podium-block-1"><span class="podium-rank">1</span></div>
+        </div>
+        <!-- 3rd -->
+        <div class="podium-card podium-3">
+            <div class="podium-avatar">{{ leaders[2].name[0] }}</div>
+            <div class="podium-name">{{ leaders[2].name }}</div>
+            <div class="podium-dept text-muted small">{{ leaders[2].department[:20] }}</div>
+            <div class="podium-badges">{% for icon in badges_map.get(leaders[2].id, []) %}{{ icon }}{% endfor %}</div>
+            <div class="podium-credits">{{ leaders[2].balance|int }} cr</div>
+            <div class="podium-block podium-block-3"><span class="podium-rank">3</span></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Full Leaderboard Table -->
+    <div class="card glass-panel hover-lift">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-header">
+                    <tr>
+                        <th style="width:60px;">Rank</th>
+                        <th>Student</th>
+                        <th>Department</th>
+                        <th>Balance</th>
+                        <th>Total Earned</th>
+                        <th>Completed</th>
+                        <th>Trust Score</th>
+                        <th>Badges</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in leaders %}
+                    <tr class="{% if l.id == session.user_id %}highlight-row{% endif %}">
+                        <td>
+                            <div class="rank-badge rank-{{ loop.index }}">
+                                {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{%
+                                else %}#{{ loop.index }}{% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="owner-avatar-sm">{{ l.name[0] }}</div>
+                                <div>
+                                    <p class="mb-0 fw-600">{{ l.name }}{% if l.id == session.user_id %} <span
+                                            class="badge bg-primary-subtle text-primary ms-1">You</span>{% endif %}</p>
+                                    <p class="mb-0 text-muted" style="font-size:0.72rem;">{{ l.role }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-muted small">{{ l.department }}</td>
+                        <td><span class="fw-700 text-primary">{{ l.balance|int }}</span> <small
+                                class="text-muted">cr</small></td>
+                        <td><span class="text-success">{{ l.total_earned|int }}</span> <small
+                                class="text-muted">cr</small></td>
+                        <td>{{ l.completed }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-1">
+                                <i class="bi bi-star-fill text-warning" style="font-size:0.75rem;"></i>
+                                <span class="fw-600">{{ l.trust_score }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badges-inline">
+                                {% for icon in badges_map.get(l.id, []) %}{{ icon }}{% endfor %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

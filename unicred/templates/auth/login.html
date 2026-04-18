@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+
+<div class="auth-split-layout">
+
+    <!-- ── Left Info Panel ────────────────────────── -->
+    <div class="col-md-5 col-lg-5 auth-info-panel d-none d-md-flex">
+        <div class="auth-info-logo">
+            <i class="bi bi-hexagon-fill" style="position:absolute;font-size:44px;color:rgba(255,255,255,.25);"></i>
+            <span style="position:relative;color:#fff;font-weight:800;font-size:20px;z-index:2;">U</span>
+        </div>
+
+        <h2>Welcome back to UniCred</h2>
+        <p>Your campus economy account is waiting — sign in to manage your credits, resources, and exchanges.</p>
+
+        <ul class="auth-benefit-list">
+            <li>
+                <span class="benefit-icon"><i class="bi bi-coin"></i></span>
+                Track your credit balance in real time
+            </li>
+            <li>
+                <span class="benefit-icon"><i class="bi bi-box-seam"></i></span>
+                Manage your active lendings &amp; borrowings
+            </li>
+            <li>
+                <span class="benefit-icon"><i class="bi bi-qr-code-scan"></i></span>
+                Generate &amp; scan QR codes for exchanges
+            </li>
+            <li>
+                <span class="benefit-icon"><i class="bi bi-trophy"></i></span>
+                Check your rank on the leaderboard
+            </li>
+        </ul>
+    </div>
+
+    <!-- ── Right Form Panel ───────────────────────── -->
+    <div class="col-12 col-md-7 col-lg-7 auth-form-panel">
+        <div class="auth-form-box">
+
+            <!-- Heading -->
+            <div class="text-center mb-4">
+                <div class="auth-logo mb-3">
+                    <i class="bi bi-hexagon-fill"></i>
+                    <span>U</span>
+                </div>
+                <h2 class="fw-800 mb-1" style="letter-spacing:-.02em;">Sign in</h2>
+                <p class="text-muted mb-0" style="font-size:.9rem;">Enter your credentials to access your account</p>
+            </div>
+
+            <!-- Form -->
+            <form method="POST" action="{{ url_for('login') }}" id="loginForm" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label fw-600" style="font-size:13px;" for="email">
+                        <i class="bi bi-envelope me-1 text-muted"></i> Institutional Email
+                    </label>
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="email" name="email"
+                            placeholder="you@college.edu" required autocomplete="email">
+                        <label for="email">you@college.edu</label>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-2">
+                    <label class="form-label fw-600 d-flex justify-content-between" style="font-size:13px;" for="password">
+                        <span><i class="bi bi-lock me-1 text-muted"></i> Password</span>
+                        <a href="#" class="forgot-link" tabindex="-1">Forgot password?</a>
+                    </label>
+                    <div class="form-floating position-relative">
+                        <input type="password" class="form-control" id="password" name="password"
+                            placeholder="Password" required autocomplete="current-password">
+                        <label for="password">Your password</label>
+                        <button type="button" class="btn-password-toggle" onclick="togglePassword('password')" tabindex="-1">
+                            <i class="bi bi-eye" id="passwordEye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary w-100 btn-lg rounded-3 mt-4" id="loginBtn">
+                    <span class="btn-text"><i class="bi bi-box-arrow-in-right me-2"></i>Sign In</span>
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                </button>
+            </form>
+
+            <!-- Divider & Register link -->
+            <hr class="my-4">
+            <p class="text-center text-muted mb-0" style="font-size:.875rem;">
+                New to UniCred?
+                <a href="{{ url_for('register') }}" class="text-primary fw-600">Create a free account</a>
+            </p>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        const eye = document.getElementById(id + 'Eye');
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            eye.className = 'bi bi-eye';
+        }
+    }
+    document.getElementById('loginForm').addEventListener('submit', function () {
+        const btn = document.getElementById('loginBtn');
+        btn.querySelector('.btn-text').classList.add('d-none');
+        btn.querySelector('.spinner-border').classList.remove('d-none');
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

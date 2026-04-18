@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Request a Resource{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:700px;">
+    <div class="card glass-panel">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi bi-hand-index-thumb text-primary fs-5"></i>
+            <div>
+                <h4 class="mb-0 fw-700">Request a Resource</h4>
+                <p class="text-muted small mb-0 mt-1">Post what you need — the campus community will help you out</p>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <!-- Info banner -->
+            <div class="alert alert-primary d-flex align-items-center gap-2 mb-4" style="border-radius:var(--radius-md);">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>When someone accepts your request, you'll complete the exchange with the existing <strong>QR verification</strong> system.</span>
+            </div>
+
+            <form method="POST" action="{{ url_for('post_resource_request') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="row g-3">
+                    <!-- Title -->
+                    <div class="col-md-8">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="title" name="title"
+                                placeholder="Resource Name" required maxlength="200">
+                            <label for="title"><i class="bi bi-tag me-1"></i> Resource Name *</label>
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select</option>
+                                <option>Electronics</option>
+                                <option>Books</option>
+                                <option>Sports</option>
+                                <option>Tools</option>
+                                <option>Clothing</option>
+                                <option>Academic</option>
+                                <option>Skill</option>
+                                <option>Other</option>
+                            </select>
+                            <label for="category">Category *</label>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="description" name="description"
+                                placeholder="Description" style="height:100px;"></textarea>
+                            <label for="description">Description (condition, specs, notes)</label>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="location" name="location"
+                                placeholder="Location">
+                            <label for="location"><i class="bi bi-geo-alt me-1"></i> Preferred Pickup Location</label>
+                        </div>
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="duration_days" name="duration_days"
+                                value="1" min="1" max="30" placeholder="Days">
+                            <label for="duration_days">Duration (days)</label>
+                        </div>
+                    </div>
+
+                    <!-- Credits Offered -->
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="number" class="form-control" id="credits_offered" name="credits_offered"
+                                value="0" min="0" step="0.5" placeholder="Credits">
+                            <label for="credits_offered">Credits Offered</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credit estimate -->
+                <div class="mt-4 p-3 rounded-3" style="background:var(--uc-primary-light);border:1px solid rgba(79,70,229,.15);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-coin text-primary"></i>
+                        <span class="small">You are offering <strong id="creditsDisplay">0</strong> credits for
+                            <strong id="daysDisplay">1</strong> day(s).
+                            These will be deducted when the exchange is completed.</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 btn-lg rounded-3 mt-4">
+                    <i class="bi bi-send me-2"></i>Post Request
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center mt-3">
+        <a href="{{ url_for('browse_requests') }}" class="text-muted small">
+            <i class="bi bi-arrow-left me-1"></i>View existing requests
+        </a>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    const creditsInput = document.getElementById('credits_offered');
+    const daysInput    = document.getElementById('duration_days');
+    function updateDisplay() {
+        document.getElementById('creditsDisplay').textContent = parseFloat(creditsInput.value || 0).toFixed(1);
+        document.getElementById('daysDisplay').textContent    = daysInput.value || 1;
+    }
+    creditsInput.addEventListener('input', updateDisplay);
+    daysInput.addEventListener('input', updateDisplay);
+</script>
+{% endblock %}

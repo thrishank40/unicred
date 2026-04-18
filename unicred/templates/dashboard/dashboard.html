@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 px-lg-5 py-4">
+
+    <!-- ═══ Welcome Bar ═════════════════════════════════════ -->
+    <div class="dashboard-welcome-bar">
+        <div>
+            <p class="section-eyebrow mb-1">Dashboard</p>
+            <h1 class="page-title fw-800 mb-1">
+                {% set hour = now().hour %}
+                Good {% if hour < 12 %}Morning{% elif hour < 17 %}Afternoon{% else %}Evening{% endif %},
+                <span class="text-primary">{{ session.name.split()[0] }}</span> 👋
+            </h1>
+            <p class="text-muted mb-0" style="font-size:.875rem;">
+                Here's what's happening in your campus economy
+            </p>
+        </div>
+        <a href="{{ url_for('offer_resource') }}" class="btn btn-primary rounded-pill px-4 flex-shrink-0">
+            <i class="bi bi-plus-circle me-2"></i>Offer Resource
+        </a>
+    </div>
+
+    <!-- ═══ Stats Cards ══════════════════════════════════════ -->
+    <div class="row g-3 mb-4">
+
+        <!-- Credit Balance — Primary / most prominent -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-card-blue hover-lift">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stat-card-label">Credit Balance</div>
+                        <div class="stat-card-value">{{ credits.balance|int if credits else 0 }}</div>
+                        {% if credits and credits.locked_credits > 0 %}
+                        <div class="stat-card-sub">
+                            <i class="bi bi-lock-fill me-1"></i>{{ credits.locked_credits|int }} locked
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="stat-card-icon">
+                        <i class="bi bi-coin"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trust Score -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-card-yellow hover-lift">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stat-card-label">Trust Score</div>
+                        <div class="stat-card-value">{{ user.trust_score }}</div>
+                        <div class="mini-stars mt-1">
+                            {% for i in range(1,6) %}
+                            <i class="bi bi-star{% if i <= user.trust_score|round(0,'floor')|int %}-fill{% elif i <= user.trust_score + 0.5 %}-half{% endif %} text-warning" style="font-size:11px;"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="stat-card-icon">
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Borrowings -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-card-green hover-lift">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stat-card-label">Active Borrowings</div>
+                        <div class="stat-card-value">{{ active_borrowings|length }}</div>
+                        <div class="stat-card-sub">Items borrowed</div>
+                    </div>
+                    <div class="stat-card-icon">
+                        <i class="bi bi-arrow-down-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Lendings -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-card-purple hover-lift">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stat-card-label">Active Lendings</div>
+                        <div class="stat-card-value">{{ active_lendings|length }}</div>
+                        <div class="stat-card-sub">Rank #{{ rank }}</div>
+                    </div>
+                    <div class="stat-card-icon">
+                        <i class="bi bi-arrow-up-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══ Main Two-Column Layout ══════════════════════════ -->
+    <div class="row g-4">
+
+        <!-- ── Left Column (70%) ─────────────────────────── -->
+        <div class="col-lg-8">
+
+            <!-- Pending Requests -->
+            {% if pending_requests %}
+            <div class="card mb-4 glass-panel">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-inbox text-warning"></i>
+                    <h5 class="mb-0 fw-700">Pending Requests</h5>
+                    <span class="badge bg-warning text-dark ms-auto">{{ pending_requests|length }}</span>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% for req in pending_requests %}
+                    <div class="request-item">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="flex-grow-1">
+                                <p class="mb-1 fw-600">
+                                    {{ req.borrower_name }} wants
+                                    <span class="text-primary">{{ req.title }}</span>
+                                </p>
+                                <p class="text-muted small mb-1">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ req.borrow_days }} day(s) &nbsp;·&nbsp;
+                                    <i class="bi bi-coin me-1"></i>{{ req.total_credits }} credits
+                                </p>
+                                {% if req.message %}
+                                <p class="text-muted small fst-italic mb-0">"{{ req.message }}"</p>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex gap-2 flex-shrink-0 mt-1">
+                                <form method="POST" action="{{ url_for('approve_request', req_id=req.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">
+                                        <i class="bi bi-check-lg me-1"></i>Approve
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('reject_request', req_id=req.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        <i class="bi bi-x-lg me-1"></i>Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Active Borrowings -->
+            <div class="card mb-4 glass-panel">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-down-circle text-info"></i>
+                        <h5 class="mb-0 fw-700">My Borrowings</h5>
+                    </div>
+                    <a href="{{ url_for('transaction_history') }}"
+                        class="btn btn-sm btn-outline-secondary rounded-pill">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if active_borrowings %}
+                    {% for tx in active_borrowings %}
+                    <div class="tx-item">
+                        <div class="tx-icon bg-info-subtle">
+                            <i class="bi bi-arrow-down text-info"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-600" style="font-size:.9rem;">{{ tx.title }}</p>
+                            <p class="text-muted mb-0" style="font-size:.8rem;">
+                                From {{ tx.lender_name }} &nbsp;·&nbsp;
+                                Due <span class="text-danger fw-600">{{ tx.due_date }}</span>
+                            </p>
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            <span class="badge status-badge status-{{ tx.status.lower() }}">{{ tx.status }}</span>
+                            <br>
+                            <a href="{{ url_for('view_transaction', tx_db_id=tx.id) }}"
+                                class="btn btn-sm btn-outline-primary rounded-pill mt-1">
+                                View QR
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="bi bi-inbox text-muted fs-2"></i>
+                        <p class="text-muted mt-2 mb-2">No active borrowings</p>
+                        <a href="{{ url_for('browse_resources') }}"
+                            class="btn btn-outline-primary btn-sm rounded-pill">Browse Resources</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Active Lendings -->
+            <div class="card glass-panel">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-up-circle text-success"></i>
+                    <h5 class="mb-0 fw-700">My Lendings</h5>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if active_lendings %}
+                    {% for tx in active_lendings %}
+                    <div class="tx-item">
+                        <div class="tx-icon bg-success-subtle">
+                            <i class="bi bi-arrow-up text-success"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-600" style="font-size:.9rem;">{{ tx.title }}</p>
+                            <p class="text-muted mb-0" style="font-size:.8rem;">
+                                To {{ tx.borrower_name }} &nbsp;·&nbsp; Due {{ tx.due_date }}
+                            </p>
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            <span class="badge status-badge status-{{ tx.status.lower() }}">{{ tx.status }}</span>
+                            <br>
+                            <a href="{{ url_for('scan_qr') }}"
+                                class="btn btn-sm btn-outline-success rounded-pill mt-1">
+                                <i class="bi bi-qr-code-scan me-1"></i>Scan
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="bi bi-box-seam text-muted fs-2"></i>
+                        <p class="text-muted mt-2 mb-2">No active lendings</p>
+                        <a href="{{ url_for('offer_resource') }}"
+                            class="btn btn-outline-success btn-sm rounded-pill">Offer a Resource</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Resource Requests (open — posted by others) -->
+            <div class="card mb-4 glass-panel">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clipboard2-check text-primary"></i>
+                        <h5 class="mb-0 fw-700">Resource Requests</h5>
+                    </div>
+                    <a href="{{ url_for('browse_requests', tab='resource') }}"
+                        class="btn btn-sm btn-outline-secondary rounded-pill">View All</a>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if open_resource_reqs %}
+                    {% for req in open_resource_reqs[:3] %}
+                    <div class="tx-item">
+                        <div class="tx-icon bg-primary-subtle">
+                            <i class="bi bi-box-seam text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-600" style="font-size:.9rem;">{{ req.title }}</p>
+                            <p class="text-muted mb-0" style="font-size:.8rem;">
+                                by {{ req.requester_name }} &nbsp;&middot;&nbsp;
+                                <i class="bi bi-coin me-1 text-primary"></i>{{ req.credits_offered }} credits
+                            </p>
+                        </div>
+                        <form method="POST"
+                            action="{{ url_for('accept_resource_request', req_id=req.id) }}"
+                            onsubmit="return confirm('Accept this request?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-primary rounded-pill px-3">Accept</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-3 text-center">
+                        <i class="bi bi-clipboard2 text-muted fs-2"></i>
+                        <p class="text-muted small mt-2 mb-2">No open resource requests</p>
+                        <a href="{{ url_for('post_resource_request') }}"
+                            class="btn btn-outline-primary btn-sm rounded-pill">Post a Request</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Knowledge Requests (open — posted by others) -->
+            <div class="card glass-panel">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard text-warning"></i>
+                        <h5 class="mb-0 fw-700">Knowledge Requests</h5>
+                    </div>
+                    <a href="{{ url_for('browse_requests', tab='knowledge') }}"
+                        class="btn btn-sm btn-outline-secondary rounded-pill">View All</a>
+                </div>
+                <div class="card-body px-4 py-3">
+                    {% if open_knowledge_reqs %}
+                    {% for req in open_knowledge_reqs[:3] %}
+                    <div class="tx-item">
+                        <div class="tx-icon" style="background:#FEF9C3;">
+                            <i class="bi bi-mortarboard" style="color:#92400E;"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-600" style="font-size:.9rem;">{{ req.topic }}</p>
+                            <p class="text-muted mb-0" style="font-size:.8rem;">
+                                <span class="fw-600">{{ req.subject }}</span> &middot;
+                                {{ req.requester_name }} &nbsp;&middot;&nbsp;
+                                <i class="bi bi-coin me-1" style="color:var(--uc-warning);"></i>{{ req.credits_offered }}
+                            </p>
+                        </div>
+                        <form method="POST"
+                            action="{{ url_for('accept_knowledge_request', req_id=req.id) }}"
+                            onsubmit="return confirm('Accept to help with this request?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm rounded-pill px-3"
+                                style="background:linear-gradient(135deg,var(--uc-warning),#D97706);color:#fff;">Help</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state py-3 text-center">
+                        <i class="bi bi-lightbulb text-muted fs-2"></i>
+                        <p class="text-muted small mt-2 mb-2">No open knowledge requests</p>
+                        <a href="{{ url_for('post_knowledge_request') }}"
+                            class="btn btn-outline-warning btn-sm rounded-pill">Request Help</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── Right Sidebar (30%) ───────────────────────── -->
+        <div class="col-lg-4">
+
+            <!-- Badges -->
+            {% if badges %}
+            <div class="card mb-4 glass-panel">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-award text-warning"></i>
+                    <h5 class="mb-0 fw-700">My Badges</h5>
+                </div>
+                <div class="card-body px-4 py-3">
+                    <div class="badges-grid">
+                        {% for badge in badges %}
+                        <div class="badge-chip" title="{{ badge.description }}">
+                            <span class="badge-icon">{{ badge.icon }}</span>
+                            <span class="badge-name">{{ badge.name }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card mb-4 glass-panel">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-lightning-charge text-primary"></i>
+                    <h5 class="mb-0 fw-700">Quick Actions</h5>
+                </div>
+                <div class="card-body px-4 py-3">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('browse_resources') }}"
+                            class="btn btn-outline-primary rounded-3 text-start d-flex align-items-center gap-2">
+                            <i class="bi bi-search"></i> Browse Resources
+                        </a>
+                        <a href="{{ url_for('offer_resource') }}"
+                            class="btn btn-outline-success rounded-3 text-start d-flex align-items-center gap-2">
+                            <i class="bi bi-plus-circle"></i> Offer Resource
+                        </a>
+                        <a href="{{ url_for('scan_qr') }}"
+                            class="btn btn-outline-info rounded-3 text-start d-flex align-items-center gap-2">
+                            <i class="bi bi-qr-code-scan"></i> Scan QR Code
+                        </a>
+                        <a href="{{ url_for('knowledge_hub') }}"
+                            class="btn btn-outline-warning rounded-3 text-start d-flex align-items-center gap-2">
+                            <i class="bi bi-lightbulb"></i> Knowledge Hub
+                        </a>
+                        <a href="{{ url_for('browse_requests') }}"
+                            class="btn btn-outline-primary rounded-3 text-start d-flex align-items-center gap-2"
+                            style="border-color:var(--uc-primary);">
+                            <i class="bi bi-clipboard2-check"></i> Browse Requests
+                        </a>
+                        <a href="{{ url_for('post_resource_request') }}"
+                            class="btn btn-outline-secondary rounded-3 text-start d-flex align-items-center gap-2">
+                            <i class="bi bi-hand-index-thumb"></i> Request Resource
+                        </a>
+                        <a href="{{ url_for('leaderboard') }}"
+                            class="btn btn-outline-secondary rounded-3 text-start d-flex align-items-center gap-2">
+                            <i class="bi bi-trophy"></i> Leaderboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="card glass-panel">
+                <div class="card-header d-flex align-items-center gap-2">
+                    <i class="bi bi-bell text-danger"></i>
+                    <h5 class="mb-0 fw-700">Notifications</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if notifications %}
+                    <ul class="list-group list-group-flush notif-list">
+                        {% for n in notifications %}
+                        <li class="list-group-item notif-list-item {% if not n.is_read %}notif-unread{% endif %}">
+                            <div class="notif-dot notif-dot-{{ n.type }}"></div>
+                            <div class="flex-grow-1">
+                                <p class="mb-0 small fw-600">{{ n.title }}</p>
+                                <p class="mb-0 text-muted" style="font-size:.78rem;">{{ n.message }}</p>
+                                <p class="mb-0 text-muted" style="font-size:.72rem;">{{ n.created_at }}</p>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="empty-state py-3 text-center">
+                        <i class="bi bi-bell-slash text-muted fs-3"></i>
+                        <p class="text-muted small mt-2 mb-0">No notifications yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div><!-- /row -->
+</div>
+{% endblock %}

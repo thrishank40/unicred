@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Browse Resources{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-3">
+        <div>
+            <h1 class="page-title mb-1">
+                {% if rtype == 'Skill' %}<i class="bi bi-tools me-2"></i>Skill Sharing
+                {% else %}<i class="bi bi-box-seam me-2"></i>Resource Marketplace
+                {% endif %}
+            </h1>
+            <p class="text-muted mb-0">Browse what your campus community is sharing</p>
+        </div>
+        <a href="{{ url_for('offer_resource') }}" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-plus-circle me-2"></i>Offer Resource
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar mb-4">
+        <form method="GET" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div style="flex:1; min-width:200px;">
+                <input type="search" name="search" value="{{ search }}" class="form-control rounded-pill filter-search"
+                    placeholder="Search resources...">
+            </div>
+            <select name="category" class="form-select rounded-pill w-auto">
+                <option value="">All Categories</option>
+                {% for cat in ['Electronics','Books','Sports','Tools','Clothing','Academic','Other'] %}
+                <option value="{{ cat }}" {% if category==cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="type" value="{{ rtype }}">
+            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-search me-1"></i>Search
+            </button>
+            {% if category or search %}
+            <a href="{{ url_for('browse_resources', type=rtype) }}"
+                class="btn btn-outline-secondary rounded-pill">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Resource Type Tabs -->
+    <ul class="nav nav-pills mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if rtype == 'Resource' %}active{% endif %}"
+                href="{{ url_for('browse_resources', type='Resource') }}">
+                <i class="bi bi-box-seam me-2"></i>Resources
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if rtype == 'Skill' %}active{% endif %}"
+                href="{{ url_for('browse_resources', type='Skill') }}">
+                <i class="bi bi-tools me-2"></i>Skills
+            </a>
+        </li>
+    </ul>
+
+    <!-- Results -->
+    {% if resources %}
+    <div class="row g-4">
+        {% for res in resources %}
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+            <div class="card resource-card glass-panel hover-lift h-100">
+                <div class="card-header resource-card-header">
+                    <div class="resource-category-icon">
+                        {% if res.category == 'Electronics' %}<i class="bi bi-laptop text-primary"></i>
+                        {% elif res.category == 'Books' %}<i class="bi bi-book text-warning"></i>
+                        {% elif res.category == 'Sports' %}<i class="bi bi-dribbble text-danger"></i>
+                        {% elif res.category == 'Tools' %}<i class="bi bi-tools text-secondary"></i>
+                        {% elif res.category == 'Skill' %}<i class="bi bi-lightbulb text-info"></i>
+                        {% else %}<i class="bi bi-box-seam text-muted"></i>
+                        {% endif %}
+                    </div>
+                    <span class="badge category-badge">{{ res.category }}</span>
+                </div>
+                <div class="card-body resource-card-body">
+                    <h5 class="resource-title">{{ res.title }}</h5>
+                    <p class="text-muted small mb-3">{{ res.description[:80] if res.description else 'No description'
+                        }}{% if res.description and res.description|length > 80 %}...{% endif %}</p>
+
+                    <div class="resource-meta">
+                        <div class="meta-item">
+                            <i class="bi bi-coin text-primary me-1"></i>
+                            <span>{{ res.credits_per_day }} credits/day</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-shield-lock text-warning me-1"></i>
+                            <span>{{ res.security_deposit }} deposit</span>
+                        </div>
+                        {% if res.location %}
+                        <div class="meta-item">
+                            <i class="bi bi-geo-alt text-info me-1"></i>
+                            <span>{{ res.location }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mt-3">
+                        <div class="owner-avatar-sm">{{ res.owner_name[0] }}</div>
+                        <div>
+                            <p class="mb-0 small fw-500">{{ res.owner_name }}</p>
+                            <div class="trust-mini">
+                                <i class="bi bi-star-fill text-warning" style="font-size:0.65rem;"></i>
+                                <span style="font-size:0.72rem;">{{ res.trust_score }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer resource-card-footer border-0 bg-transparent mb-3">
+                    <a href="{{ url_for('resource_detail', resource_id=res.id) }}"
+                        class="btn btn-primary w-100 rounded-3">
+                        View & Request
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-page-state text-center py-6">
+        <div class="empty-illustration mb-4">
+            <i class="bi bi-search" style="font-size:5rem;color:var(--gray-300);"></i>
+        </div>
+        <h3>No resources found</h3>
+        <p class="text-muted">Try adjusting your filters or be the first to offer a resource!</p>
+        <a href="{{ url_for('offer_resource') }}" class="btn btn-primary rounded-pill px-5 mt-2">
+            <i class="bi bi-plus-circle me-2"></i>Offer Something
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
